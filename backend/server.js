@@ -90,8 +90,22 @@ const CONTRACT_ADDRESSES = {
     carbonMarketplace: process.env.CARBON_MARKETPLACE_ADDRESS || ''
 };
 
-// Import route handlers
-const authRoutes = require('./routes/auth');
+// Import route handlers - Use dev routes if MongoDB is unavailable
+let authRoutes;
+try {
+    // Check if we're connected to MongoDB
+    if (mongoose.connection.readyState === 1) {
+        authRoutes = require('./routes/auth');
+        console.log('✅ Using production auth routes with MongoDB');
+    } else {
+        throw new Error('MongoDB not available');
+    }
+} catch (error) {
+    authRoutes = require('./routes/auth-dev');
+    console.log('⚠️  Using development auth routes (in-memory storage)');
+    console.log('💡 For production, please set up MongoDB connection');
+}
+
 const blockchainRoutes = require('./routes/blockchain');
 
 // Use routes
