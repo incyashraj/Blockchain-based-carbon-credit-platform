@@ -1,4 +1,4 @@
-# Carbon Credit Blockchain System
+# SCIN: Scientific Carbon Intelligence Network
 
 A comprehensive blockchain-based platform for carbon credit tokenization, tracking, and verification using IoT sensors and AI-powered fraud detection.
 
