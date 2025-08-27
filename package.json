@@ -1,0 +1,47 @@
+{
+  "name": "carbon-credit-blockchain",
+  "version": "1.0.0",
+  "description": "Blockchain-based carbon credit system with IoT monitoring and AI verification",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "test": "jest",
+    "compile": "npx hardhat compile",
+    "deploy:testnet": "npx hardhat run blockchain/scripts/deploy.js --network sepolia",
+    "frontend:dev": "cd frontend && npm run dev",
+    "ai:train": "cd ai-verification && python train_model.py"
+  },
+  "keywords": [
+    "blockchain",
+    "carbon-credits",
+    "IoT",
+    "AI",
+    "sustainability",
+    "MRV"
+  ],
+  "author": "Carbon Credit System Team",
+  "license": "MIT",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.6",
+    "axios": "^1.7.7",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.2",
+    "express": "^4.19.2",
+    "express-validator": "^7.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.2",
+    "mqtt": "^5.3.4",
+    "web3": "^4.3.0",
+    "form-data": "^4.0.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "chai": "^4.5.0",
+    "hardhat": "^2.22.10",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.4"
+  }
+}

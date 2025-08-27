@@ -1,0 +1,24 @@
+# AI/ML Dependencies for Carbon Verification
+tensorflow>=2.17.0
+scikit-learn>=1.4.0
+pandas>=2.0.0
+numpy>=1.24.0
+flask==3.0.3
+requests==2.32.3
+
+# IoT and Data Processing
+paho-mqtt==2.1.0
+matplotlib==3.9.2
+seaborn==0.13.2
+
+# Blockchain Integration
+web3==6.20.3
+
+# Security and Utilities
+cryptography==43.0.1
+python-dotenv==1.0.1
+gunicorn==23.0.0
+
+# Testing
+pytest==8.3.3
+pytest-cov==5.0.0

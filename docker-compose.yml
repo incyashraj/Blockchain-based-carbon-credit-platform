@@ -1,0 +1,254 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:8.0
+    container_name: carbon-credits-db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    environment:
+      - MONGO_INITDB_DATABASE=carbon_credits
+    networks:
+      - carbon-credits-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: carbon-credits-cache
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - carbon-credits-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # MQTT Broker
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: carbon-credits-mqtt
+    restart: always
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mqtt_data:/mosquitto/data
+      - mqtt_logs:/mosquitto/log
+    networks:
+      - carbon-credits-network
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h localhost -t health -m 'check' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Blockchain Node (Local Development)
+  blockchain-node:
+    build:
+      context: .
+      target: blockchain-node
+    container_name: carbon-credits-blockchain
+    restart: always
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./deployments:/app/deployments
+      - blockchain_data:/app/cache
+    environment:
+      - NODE_ENV=development
+    networks:
+      - carbon-credits-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8545 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API Server
+  backend:
+    build:
+      context: .
+      target: backend
+    container_name: carbon-credits-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./deployments:/app/deployments
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/carbon_credits
+      - REDIS_URL=redis://redis:6379
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - ETHEREUM_RPC_URL=http://blockchain-node:8545
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+      blockchain-node:
+        condition: service_healthy
+    networks:
+      - carbon-credits-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # AI Verification Service
+  ai-verification:
+    build:
+      context: .
+      target: ai-service
+    container_name: carbon-credits-ai
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ai-verification/models:/app/models
+      - ./ai-verification/training/data:/app/training/data
+      - ./logs:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - MODEL_PATH=/app/models
+      - TRAINING_DATA_PATH=/app/training/data
+    networks:
+      - carbon-credits-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Application
+  frontend:
+    build:
+      context: .
+      target: frontend-prod
+    container_name: carbon-credits-frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+    networks:
+      - carbon-credits-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # IoT Sensor Simulation
+  iot-simulation:
+    build:
+      context: .
+      target: iot-service
+    container_name: carbon-credits-iot
+    restart: always
+    environment:
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - SIMULATION_SENSORS=5
+      - DATA_INTERVAL=30
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - carbon-credits-network
+
+  # Nginx Load Balancer & Reverse Proxy
+  nginx-lb:
+    image: nginx:alpine
+    container_name: carbon-credits-nginx
+    restart: always
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/nginx-lb.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - carbon-credits-network
+
+  # Monitoring & Observability
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: carbon-credits-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - carbon-credits-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: carbon-credits-grafana
+    restart: always
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=carbon_credits_admin
+    depends_on:
+      - prometheus
+    networks:
+      - carbon-credits-network
+
+# Named Volumes
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  mqtt_data:
+    driver: local
+  mqtt_logs:
+    driver: local
+  blockchain_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# Networks
+networks:
+  carbon-credits-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

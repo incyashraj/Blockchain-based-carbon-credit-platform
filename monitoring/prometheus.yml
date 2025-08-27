@@ -1,0 +1,117 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    project: 'carbon-credits-blockchain'
+    environment: 'development'
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Backend API Server
+  - job_name: 'carbon-credits-backend'
+    static_configs:
+      - targets: ['backend:3000']
+    scrape_interval: 15s
+    metrics_path: /metrics
+    basic_auth:
+      username: 'prometheus'
+      password: 'carbon_monitoring'
+
+  # AI Verification Service
+  - job_name: 'ai-verification'
+    static_configs:
+      - targets: ['ai-verification:5000']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Frontend (Nginx metrics if enabled)
+  - job_name: 'frontend-nginx'
+    static_configs:
+      - targets: ['frontend:80']
+    scrape_interval: 60s
+    metrics_path: /nginx_status
+
+  # Load Balancer
+  - job_name: 'nginx-loadbalancer'
+    static_configs:
+      - targets: ['nginx-lb:80']
+    scrape_interval: 30s
+    metrics_path: /nginx_status
+
+  # MongoDB (if metrics enabled)
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb:27017']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # MQTT Broker
+  - job_name: 'mosquitto'
+    static_configs:
+      - targets: ['mosquitto:1883']
+    scrape_interval: 60s
+
+  # Blockchain Node
+  - job_name: 'blockchain-node'
+    static_configs:
+      - targets: ['blockchain-node:8545']
+    scrape_interval: 30s
+    metrics_path: /debug/metrics/prometheus
+    scheme: http
+
+  # IoT Simulation Service (custom metrics endpoint)
+  - job_name: 'iot-simulation'
+    static_configs:
+      - targets: ['iot-simulation:8080']
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # Node Exporter for system metrics (if added)
+  # - job_name: 'node-exporter'
+  #   static_configs:
+  #     - targets: ['node-exporter:9100']
+  #   scrape_interval: 30s
+
+# Alerting configuration (for future implementation)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Recording rules for performance optimization
+recording_rules:
+  - name: carbon_credits_rules
+    interval: 30s
+    rules:
+      - record: carbon_credits:api_requests_per_second
+        expr: rate(http_requests_total[5m])
+      
+      - record: carbon_credits:error_rate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])
+      
+      - record: carbon_credits:verification_success_rate
+        expr: rate(verification_requests_total{status="success"}[5m]) / rate(verification_requests_total[5m])
+      
+      - record: carbon_credits:blockchain_transactions_per_minute
+        expr: rate(blockchain_transactions_total[1m]) * 60
+      
+      - record: carbon_credits:iot_data_points_per_minute
+        expr: rate(iot_sensor_readings_total[1m]) * 60

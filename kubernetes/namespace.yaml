@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: carbon-credits
+  labels:
+    app: carbon-credits-blockchain
+    version: v2.0
+    environment: production
+    managed-by: argocd
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: carbon-credits-monitoring
+  labels:
+    app: carbon-credits-monitoring
+    version: v2.0
+    environment: production
+    managed-by: argocd

@@ -1,0 +1,81 @@
+# Dependencies
+node_modules/
+*/node_modules/
+venv/
+__pycache__/
+*.pyc
+
+# Development files
+.git/
+.vscode/
+.idea/
+*.log
+logs/
+
+# Environment files
+.env.local
+.env.development
+.env.test
+.env.production.local
+
+# Build artifacts
+build/
+dist/
+target/
+*.tgz
+*.tar.gz
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+*.swp
+*.swo
+*~
+
+# Blockchain artifacts (include these selectively)
+blockchain/cache/
+blockchain/artifacts/contracts/*.dbg.json
+
+# AI/ML models (large files)
+*.pkl
+*.h5
+*.pb
+models/*.bin
+
+# Documentation
+*.md
+!README.md
+
+# Docker files (don't copy into containers)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Scripts (managed separately)
+scripts/
+
+# SSL certificates
+ssl/
+*.pem
+*.key
+*.crt
+
+# Monitoring data
+prometheus_data/
+grafana_data/
+
+# Database files
+*.db
+*.sqlite

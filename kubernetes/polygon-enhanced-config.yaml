@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: polygon-enhanced-config
+  namespace: carbon-credits
+  labels:
+    app: carbon-credits-blockchain
+    component: polygon-config
+    version: v2.0
+data:
+  # Polygon 2025 Enhanced Configuration
+  NETWORK_NAME: "polygon-pos"
+  CHAIN_ID: "137"
+  
+  # AggLayer Integration
+  AGGLAYER_ENABLED: "true"
+  AGGLAYER_RPC_URL: "https://agglayer-rpc.polygon.technology"
+  CROSS_CHAIN_ENABLED: "true"
+  
+  # CDK 2.0 Configuration
+  CDK_VERSION: "2.0"
+  THROUGHPUT_TARGET: "60"  # MGas/s
+  WITHDRAWAL_DELAY: "0"    # No delay with CDK 2.0
+  
+  # zkEVM Type 1 Settings
+  ZKEVM_TYPE: "1"
+  PROOF_GENERATION: "enabled"
+  COST_PER_TX: "0.002"     # USD
+  
+  # POL Token Configuration
+  NATIVE_TOKEN: "POL"
+  TOKEN_CONTRACT: "0x455e53124C21079E2235bc6DbD7C0c93abE18C83"  # POL mainnet
+  STAKING_ENABLED: "true"
+  
+  # Enhanced RPC Configuration
+  PRIMARY_RPC: "https://polygon-rpc.com"
+  BACKUP_RPC_1: "https://rpc.ankr.com/polygon"
+  BACKUP_RPC_2: "https://polygon-mainnet.infura.io/v3/"
+  WEBSOCKET_RPC: "wss://polygon-mainnet.infura.io/ws/v3/"
+  
+  # Gas Optimization
+  GAS_PRICE_STRATEGY: "dynamic"
+  MAX_GAS_PRICE: "500000000000"  # 500 gwei max
+  MIN_GAS_PRICE: "30000000000"   # 30 gwei min
+  GAS_MULTIPLIER: "1.2"
+  
+  # Carbon Credits Specific
+  CARBON_TOKEN_STANDARD: "ERC1155"
+  IPFS_GATEWAY: "https://gateway.pinata.cloud/ipfs/"
+  AI_VERIFICATION_THRESHOLD: "0.9"
+  
+  # Monitoring & Observability
+  METRICS_ENABLED: "true"
+  TRACING_ENABLED: "true"
+  LOG_LEVEL: "info"
+  
+  # Security
+  RATE_LIMIT_ENABLED: "true"
+  RATE_LIMIT_RPM: "1000"
+  SIGNATURE_VERIFICATION: "enabled"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: polygon-secrets
+  namespace: carbon-credits
+  labels:
+    app: carbon-credits-blockchain
+    component: secrets
+type: Opaque
+stringData:
+  INFURA_API_KEY: "0b64ffddacc1413c97dc9960bc3ef97a"
+  PRIVATE_KEY: "0x02459a12557b723b062f881bcf5be08732bca4a902baa149d13eba402a190e1b"
+  WALLET_ADDRESS: "0xA848686157Ad328ca443f49f9a44800c2f9239D8"
+  JWT_SECRET: "carbon_credits_jwt_2025_secure_key"
+  MONGODB_URI: "mongodb://mongodb-service:27017/carbon_credits"
+  REDIS_URL: "redis://redis-service:6379"
+  PINATA_API_KEY: ""
+  PINATA_SECRET: ""
